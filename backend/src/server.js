@@ -26,6 +26,7 @@ app.get("/", (req, res) => {
   res.status(200).send("TicketFlix backend is running 🚀");
 });
 
+
 // API routes
 app.use("/api/tasks", taskRoute);
 app.use("/api/auth", authRoute);
