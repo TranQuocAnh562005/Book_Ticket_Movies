@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { io } from "socket.io-client";
 import LegendItems from "../components/LegendItems";
 import PaymentPopup from "../components/PaymentPopup";
-import Seat from "../components/Seat";
+import SeatRealtime from "../components/SeatRealtime";
 import {
   generateShowtimes,
   getShowtimeSeats,
@@ -125,8 +126,83 @@ export default function TicketBooking() {
   const [selectedShowtimeId, setSelectedShowtimeId] = useState("");
   const [selectedSeat, setSelectedSeat] = useState([]);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
+  const [heldSeats, setHeldSeats] = useState(new Map());
   const showtimeCacheRef = useRef(new Map());
   const generatedMoviesRef = useRef(new Set());
+  const socketRef = useRef(null);
+
+  // We need to parse user from local storage to get their ID, assuming standard JWT/user storage
+  const currentUser = useMemo(() => {
+    try {
+      const userStr = localStorage.getItem("user") || localStorage.getItem("userInfo");
+      return userStr ? JSON.parse(userStr) : { _id: "guest_" + Math.random().toString(36).substr(2, 9) };
+    } catch (e) {
+      return { _id: "guest_" + Math.random().toString(36).substr(2, 9) };
+    }
+  }, []);
+
+  useEffect(() => {
+    // Initialize socket
+    socketRef.current = io("http://localhost:5001");
+
+    socketRef.current.on("connect", () => {
+      console.log("Socket connected:", socketRef.current.id);
+    });
+
+    socketRef.current.on("seat:initial_held", (seats) => {
+      setHeldSeats((prev) => {
+        const newMap = new Map(prev);
+        seats.forEach(seat => {
+          newMap.set(seat.seatCode, { userId: seat.userId, expiresAt: seat.expiresAt });
+        });
+        return newMap;
+      });
+    });
+
+    socketRef.current.on("seat:held", ({ seatCode, userId, expiresAt, showtimeId }) => {
+      if (showtimeId === selectedShowtimeId) {
+        setHeldSeats((prev) => {
+          const newMap = new Map(prev);
+          newMap.set(seatCode, { userId, expiresAt });
+          return newMap;
+        });
+      }
+    });
+
+    socketRef.current.on("seat:released", ({ seatCode, showtimeId }) => {
+      if (showtimeId === selectedShowtimeId) {
+        setHeldSeats((prev) => {
+          const newMap = new Map(prev);
+          newMap.delete(seatCode);
+          return newMap;
+        });
+      }
+    });
+
+    socketRef.current.on("seat:sold", ({ seats, showtimeId }) => {
+      if (showtimeId === selectedShowtimeId) {
+        setHeldSeats((prev) => {
+          const newMap = new Map(prev);
+          seats.forEach(seatCode => newMap.delete(seatCode));
+          return newMap;
+        });
+
+        setShowtimeSeats(prev => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            soldSeats: [...new Set([...(prev.soldSeats || []), ...seats])]
+          };
+        });
+      }
+    });
+
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+      }
+    };
+  }, [selectedShowtimeId]);
 
   useEffect(() => {
     let ignore = false;
@@ -281,10 +357,18 @@ export default function TicketBooking() {
     setSelectedSeat([]);
     setShowtimeSeats(null);
     setSeatError("");
+    setHeldSeats(new Map());
 
     if (!selectedShowtimeId) {
       setIsLoadingSeats(false);
       return undefined;
+    }
+
+    if (socketRef.current) {
+      socketRef.current.emit("join:showtime", { 
+        showtimeId: selectedShowtimeId, 
+        userId: currentUser._id 
+      });
     }
 
     const controller = new AbortController();
@@ -533,10 +617,30 @@ export default function TicketBooking() {
                   </div>
                 ) : activeSeatData ? (
                   <>
-                    <Seat
+                    <SeatRealtime
                       setSelectedSeat={setSelectedSeat}
                       selectedSeat={selectedSeat}
                       cinemaData={activeSeatData}
+                      heldSeats={heldSeats}
+                      currentUserId={currentUser._id}
+                      onSeatHold={(seatCode) => {
+                        if (socketRef.current) {
+                          socketRef.current.emit("seat:hold", {
+                            showtimeId: selectedShowtimeId,
+                            seatCode,
+                            userId: currentUser._id
+                          });
+                        }
+                      }}
+                      onSeatUnhold={(seatCode) => {
+                        if (socketRef.current) {
+                          socketRef.current.emit("seat:unhold", {
+                            showtimeId: selectedShowtimeId,
+                            seatCode,
+                            userId: currentUser._id
+                          });
+                        }
+                      }}
                     />
                     <div>
                       <LegendItems
@@ -563,6 +667,11 @@ export default function TicketBooking() {
                         color="bg-pink-500"
                         label="Sweet box"
                         border={false}
+                      />
+                      <LegendItems 
+                        color="bg-yellow-400" 
+                        label="Đang được giữ" 
+                        border={false} 
                       />
                     </div>
                   </>

@@ -10,6 +10,7 @@ import {
   getTicketSeatType,
   serializeRoomLayoutForShowtime,
 } from "../services/roomLayoutService.js";
+// sendBookingConfirmationEmail removed
 
 function normalizeSelectedSeats(payload = {}) {
   const fromDetailedSeats = Array.isArray(payload.seats)
@@ -226,6 +227,26 @@ export const createBooking = async (req, res) => {
       { ordered: true },
     );
 
+    // Email sending removed (previously sent booking confirmation here)
+
+    // Xóa hold và thông báo cho mọi người biết ghế đã được bán
+    if (req.io && req.heldSeatsMap) {
+      const sId = String(showtimeId);
+      selectedSeats.forEach((seatCode) => {
+        const key = `${sId}:${seatCode}`;
+        const heldSeat = req.heldSeatsMap.get(key);
+        if (heldSeat) {
+          clearTimeout(heldSeat.timer);
+          req.heldSeatsMap.delete(key);
+          
+          if (heldSeat.userId && req.userHeldSeats && req.userHeldSeats.has(heldSeat.userId)) {
+            req.userHeldSeats.get(heldSeat.userId).delete(key);
+          }
+        }
+      });
+      req.io.to(sId).emit("seat:sold", { seats: selectedSeats, showtimeId: sId });
+    }
+
     return res.status(201).json({
       message: "Booking created successfully.",
       booking: {
@@ -289,5 +310,34 @@ export const getMyBookings = async (req, res) => {
   } catch (error) {
     console.error("Get my bookings error:", error);
     return res.status(500).json({ message: "Cannot load your tickets. Please try again." });
+  }
+};
+
+import qrcode from "qrcode";
+
+export const getBookingQRCode = async (req, res) => {
+  try {
+    const { orderCode } = req.params;
+    
+    if (!orderCode) {
+      return res.status(400).json({ message: "Order code is required." });
+    }
+
+    const booking = await Booking.findOne({ orderCode });
+    if (!booking) {
+      return res.status(404).json({ message: "Booking not found." });
+    }
+
+    // Ensure only the owner can get the QR code
+    if (booking.userId && String(booking.userId) !== String(req.user._id)) {
+      return res.status(403).json({ message: "Access denied." });
+    }
+
+    const qrCodeDataUrl = await qrcode.toDataURL(orderCode);
+    
+    return res.status(200).json({ qr: qrCodeDataUrl });
+  } catch (error) {
+    console.error("Get booking QR code error:", error);
+    return res.status(500).json({ message: "Cannot generate QR code." });
   }
 };

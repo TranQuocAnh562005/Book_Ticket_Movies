@@ -38,4 +38,6 @@ router.post("/momo-callback", callbackLimiter, momoCallback);
 // Check payment status by MoMo orderId
 router.get("/check-status/:orderId", checkStatusLimiter, checkPaymentStatus);
 
+// Internal: send a test email to help debug delivery
+// test-email route removed
 export default router;
