@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 export default function MyTicketDetail() {
@@ -24,6 +24,37 @@ export default function MyTicketDetail() {
     paymentMethod,
     orderCode,
   } = ticket;
+
+  const [qrCode, setQrCode] = useState(null);
+  const [qrLoading, setQrLoading] = useState(true);
+  const [qrError, setQrError] = useState("");
+
+  useEffect(() => {
+    if (!orderCode) return;
+
+    const fetchQR = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await fetch(`http://localhost:5001/api/bookings/${orderCode}/qr`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+        const data = await res.json();
+        if (res.ok && data.qr) {
+          setQrCode(data.qr);
+        } else {
+          setQrError("Không thể tải mã QR");
+        }
+      } catch (err) {
+        setQrError("Không thể tải mã QR");
+      } finally {
+        setQrLoading(false);
+      }
+    };
+
+    fetchQR();
+  }, [orderCode]);
 
   const paymentMethodLabel = {
     momo: "MoMo",
@@ -144,20 +175,17 @@ export default function MyTicketDetail() {
                   </div>
 
                   <div className="flex h-40 w-40 items-center justify-center rounded-2xl bg-white p-4">
-                    <div className="grid grid-cols-6 gap-1">
-                      {[
-                        1, 1, 0, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1, 1, 0, 1, 1,
-                        1, 0, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1, 1, 0, 1,
-                      ].map((cell, index) => (
-                        <div
-                          key={index}
-                          className={`h-5 w-5 rounded-sm ${
-                            cell ? "bg-black" : "bg-white"
-                          }`}
-                        />
-                      ))}
-                    </div>
+                    {qrLoading ? (
+                      <div className="h-full w-full animate-pulse bg-gray-200" />
+                    ) : qrError ? (
+                      <span className="text-center text-sm font-semibold text-red-500">{qrError}</span>
+                    ) : (
+                      <img src={qrCode} alt="Mã QR" className="h-full w-full object-contain" />
+                    )}
                   </div>
+                </div>
+                <div className="mt-4 text-center">
+                  <span className="text-sm font-semibold text-yellow-400">Xuất trình mã này tại quầy</span>
                 </div>
               </div>
             </div>

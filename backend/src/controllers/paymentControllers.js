@@ -2,6 +2,7 @@ import crypto from "crypto";
 import axios from "axios";
 import Booking from "../models/Booking.js";
 import Ticket from "../models/Ticket.js";
+// sendBookingConfirmationEmail removed
 
 const PARTNER_CODE = process.env.MOMO_PARTNER_CODE || "MOMO";
 const ACCESS_KEY = process.env.MOMO_ACCESS_KEY || "F8BBA842ECF85";
@@ -242,6 +243,8 @@ export const momoCallback = async (req, res) => {
           { ordered: false },
         );
       }
+
+      // Email sending removed (previously sent booking confirmation here)
     } else {
       booking.status = "CANCELLED";
       booking.paymentStatus = "FAILED";
@@ -269,6 +272,7 @@ export const checkPaymentStatus = async (req, res) => {
       return res.status(404).json({ message: "Order not found." });
     }
 
+
     return res.json({
       orderId: safeOrderId,
       bookingId: String(booking._id),
@@ -283,6 +287,22 @@ export const checkPaymentStatus = async (req, res) => {
   } catch (err) {
     console.error("checkPaymentStatus error:", err.message || err);
     return res.status(500).json({ message: "Cannot check payment status." });
+  }
+};
+
+// POST /api/payment/_test-email
+export const sendTestEmail = async (req, res) => {
+  try {
+    const { to, subject, text } = req.body || {};
+    if (!to) {
+      return res.status(400).json({ message: "Missing 'to' in body." });
+    }
+
+    await sendTestEmailUtil({ to, subject, text });
+    return res.json({ success: true, to });
+  } catch (err) {
+    console.error("sendTestEmail error:", err && err.message ? err.message : err);
+    return res.status(500).json({ message: "Cannot send test email.", detail: err?.message || err });
   }
 };
 
