@@ -76,7 +76,7 @@ export default function SeatRealtime({
                   const seatType = getSeatType(rowLabel, cinemaData);
                   const isSoldSeat = soldSeatSet.has(seatId);
                   const isSelected = selectedSeat.includes(seatId);
-                  
+
                   const heldInfo = heldSeats?.get(seatId);
                   const isHeldByOthers = heldInfo && heldInfo.userId !== currentUserId;
                   const remainingMinutes = heldInfo ? Math.max(1, Math.ceil((heldInfo.expiresAt - Date.now()) / 60000)) : 0;
@@ -125,3 +125,5 @@ export default function SeatRealtime({
     </div>
   );
 }
+
+
