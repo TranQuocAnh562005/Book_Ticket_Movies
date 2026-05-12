@@ -35,8 +35,7 @@ export default function MyTicketDetail() {
     const fetchQR = async () => {
       try {
         const token = localStorage.getItem("token");
-        const API_BASE = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "") || "/api";
-        const res = await fetch(`${API_BASE}/bookings/${orderCode}/qr`, {
+        const res = await fetch(`http://localhost:5001/api/bookings/${orderCode}/qr`, {
           headers: {
             Authorization: `Bearer ${token}`
           }

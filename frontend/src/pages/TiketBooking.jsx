@@ -143,7 +143,7 @@ export default function TicketBooking() {
 
   useEffect(() => {
     // Initialize socket
-    socketRef.current = io(import.meta.env.VITE_SOCKET_URL || window.location.origin);
+    socketRef.current = io("http://localhost:5001");
 
     socketRef.current.on("connect", () => {
       console.log("Socket connected:", socketRef.current.id);
