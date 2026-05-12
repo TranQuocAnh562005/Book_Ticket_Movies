@@ -81,19 +81,19 @@ function Movie() {
       }
       try {
         const bookings = await getMyBookings(token);
-        
+
         let bookedMovieIds = [];
         if (bookings && Array.isArray(bookings)) {
           bookings.forEach(b => {
-             if (b.showtime?.movie?.id) bookedMovieIds.push(b.showtime.movie.id);
-             else if (b.showtime?.movie?.tmdbId) bookedMovieIds.push(b.showtime.movie.tmdbId);
-             else if (b.movie?.id) bookedMovieIds.push(b.movie.id);
+            if (b.showtime?.movie?.id) bookedMovieIds.push(b.showtime.movie.id);
+            else if (b.showtime?.movie?.tmdbId) bookedMovieIds.push(b.showtime.movie.tmdbId);
+            else if (b.movie?.id) bookedMovieIds.push(b.movie.id);
           });
         }
-        
+
         // Chỉ dùng các ID phim từ vé đã mua để gợi ý
         const interestedIds = bookedMovieIds.map(Number);
-        
+
         const genreCounts = {};
         interestedIds.forEach(id => {
           const m = movies.find(movie => movie.id === id);
@@ -103,17 +103,17 @@ function Movie() {
             });
           }
         });
-        
+
         const sortedGenres = Object.entries(genreCounts)
-           .sort((a, b) => b[1] - a[1])
-           .map(entry => Number(entry[0]));
-           
+          .sort((a, b) => b[1] - a[1])
+          .map(entry => Number(entry[0]));
+
         setTopGenres(sortedGenres);
       } catch (err) {
         console.error("Error fetching bookings for recommendations:", err);
       }
     };
-    
+
     if (movies.length > 0) {
       fetchTopGenres();
     }
@@ -148,11 +148,11 @@ function Movie() {
       if (minYear && releaseYear < parseInt(minYear)) return false;
       if (maxYear && releaseYear > parseInt(maxYear)) return false;
       if (selectedRating > 0 && (movie.vote_average || 0) < selectedRating) return false;
-      
+
       if (selectedRuntime !== "all") {
         // API TMDB không trả về runtime ở list, ta tạo giả lập (mock) dựa trên ID để test logic lọc
         const r = movie.runtime || (85 + (movie.id % 50));
-        
+
         if (selectedRuntime === "short" && r >= 90) return false;
         if (selectedRuntime === "medium" && (r < 90 || r > 120)) return false;
         if (selectedRuntime === "long" && r <= 120) return false;
@@ -412,8 +412,8 @@ function Movie() {
             <button
               onClick={() => setSelectedStatus("Yêu thích")}
               className={`px-6 py-2 rounded-full font-semibold transition-all duration-300 ${selectedStatus === "Yêu thích"
-                  ? "bg-gradient-to-r from-yellow-500 to-red-500 text-black shadow-lg transform scale-105"
-                  : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+                ? "bg-gradient-to-r from-yellow-500 to-red-500 text-black shadow-lg transform scale-105"
+                : "bg-gray-800 text-gray-300 hover:bg-gray-700"
                 }`}
             >
               ❤️ Yêu thích
@@ -421,8 +421,8 @@ function Movie() {
             <button
               onClick={() => setSelectedStatus("Có thể bạn thích")}
               className={`px-6 py-2 rounded-full font-semibold transition-all duration-300 ${selectedStatus === "Có thể bạn thích"
-                  ? "bg-gradient-to-r from-yellow-500 to-red-500 text-black shadow-lg transform scale-105"
-                  : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+                ? "bg-gradient-to-r from-yellow-500 to-red-500 text-black shadow-lg transform scale-105"
+                : "bg-gray-800 text-gray-300 hover:bg-gray-700"
                 }`}
             >
               ✨ Có thể bạn thích
@@ -453,60 +453,7 @@ function Movie() {
             </button>
           </div>
 
-          {/* Advanced Filters */}
-          <div className="flex flex-wrap gap-6 items-center mt-4 border-t border-gray-700/50 pt-4">
-            
-            {/* Year Filter */}
-            <div className="flex items-center gap-2">
-              <span className="text-gray-400 text-sm">📅 Năm:</span>
-              <input 
-                type="number" 
-                placeholder="Từ năm"
-                value={minYear} 
-                onChange={(e) => setMinYear(e.target.value)}
-                className="w-24 bg-gray-800 text-white text-sm rounded-lg px-3 py-1.5 outline-none focus:ring-1 focus:ring-yellow-500"
-              />
-              <span className="text-gray-400 font-bold">-</span>
-              <input 
-                type="number" 
-                placeholder="Đến năm"
-                value={maxYear} 
-                onChange={(e) => setMaxYear(e.target.value)}
-                className="w-24 bg-gray-800 text-white text-sm rounded-lg px-3 py-1.5 outline-none focus:ring-1 focus:ring-yellow-500"
-              />
-            </div>
 
-            {/* Rating Filter */}
-            <div className="flex items-center gap-2">
-              <span className="text-gray-400 text-sm">⭐ Điểm:</span>
-              <select 
-                value={selectedRating} 
-                onChange={(e) => setSelectedRating(Number(e.target.value))}
-                className="bg-gray-800 text-white text-sm rounded-lg px-3 py-1.5 outline-none focus:ring-1 focus:ring-yellow-500 cursor-pointer"
-              >
-                <option value={0}>Tất cả</option>
-                <option value={7}>≥ 7.0</option>
-                <option value={8}>≥ 8.0</option>
-                <option value={9}>≥ 9.0</option>
-              </select>
-            </div>
-
-            {/* Runtime Filter */}
-            <div className="flex items-center gap-2">
-              <span className="text-gray-400 text-sm">⏱️ Thời lượng:</span>
-              <select 
-                value={selectedRuntime} 
-                onChange={(e) => setSelectedRuntime(e.target.value)}
-                className="bg-gray-800 text-white text-sm rounded-lg px-3 py-1.5 outline-none focus:ring-1 focus:ring-yellow-500 cursor-pointer"
-              >
-                <option value="all">Tất cả</option>
-                <option value="short">Ngắn ({"<"} 90 phút)</option>
-                <option value="medium">Vừa (90 - 120 phút)</option>
-                <option value="long">Dài ({">"} 120 phút)</option>
-              </select>
-            </div>
-
-          </div>
 
           {/* Results Count */}
           <div className="mt-4 text-sm text-gray-400">
