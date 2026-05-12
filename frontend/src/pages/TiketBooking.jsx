@@ -143,7 +143,7 @@ export default function TicketBooking() {
 
   useEffect(() => {
     // Initialize socket
-    socketRef.current = io("http://localhost:5001");
+    socketRef.current = io(import.meta.env.VITE_SOCKET_URL || window.location.origin);
 
     socketRef.current.on("connect", () => {
       console.log("Socket connected:", socketRef.current.id);
@@ -365,9 +365,9 @@ export default function TicketBooking() {
     }
 
     if (socketRef.current) {
-      socketRef.current.emit("join:showtime", { 
-        showtimeId: selectedShowtimeId, 
-        userId: currentUser._id 
+      socketRef.current.emit("join:showtime", {
+        showtimeId: selectedShowtimeId,
+        userId: currentUser._id
       });
     }
 
@@ -519,11 +519,10 @@ export default function TicketBooking() {
                         <button
                           key={option.dateKey}
                           onClick={() => setSelectedDate(option.dateKey)}
-                          className={`min-w-[120px] rounded-xl border px-4 py-3 text-left transition ${
-                            active
+                          className={`min-w-[120px] rounded-xl border px-4 py-3 text-left transition ${active
                               ? "border-yellow-400 bg-yellow-400 text-black"
                               : "border-white/10 bg-white/5 text-white hover:bg-white/10"
-                          }`}
+                            }`}
                         >
                           <span className="block text-xs font-semibold uppercase opacity-70">
                             {option.isToday ? "Hôm nay" : "Ngày"}
@@ -563,13 +562,12 @@ export default function TicketBooking() {
                               key={showtime.id}
                               disabled={disabled}
                               onClick={() => setSelectedShowtimeId(showtime.id)}
-                              className={`rounded-xl border p-4 text-left transition ${
-                                active
+                              className={`rounded-xl border p-4 text-left transition ${active
                                   ? "border-yellow-400 bg-yellow-400 text-black"
                                   : disabled
                                     ? "cursor-not-allowed border-white/10 bg-gray-600/20 text-white/35"
                                     : "border-white/10 bg-white/5 text-white hover:border-yellow-400/60 hover:bg-white/10"
-                              }`}
+                                }`}
                             >
                               <span className="block text-xl font-bold">
                                 {showtime.startTimeLabel}-
@@ -668,10 +666,10 @@ export default function TicketBooking() {
                         label="Sweet box"
                         border={false}
                       />
-                      <LegendItems 
-                        color="bg-yellow-400" 
-                        label="Đang được giữ" 
-                        border={false} 
+                      <LegendItems
+                        color="bg-yellow-400"
+                        label="Đang được giữ"
+                        border={false}
                       />
                     </div>
                   </>
@@ -754,11 +752,10 @@ export default function TicketBooking() {
                 <button
                   disabled={!canOpenPayment}
                   onClick={() => setIsPopupOpen(true)}
-                  className={`rounded-xl px-6 py-3 font-semibold transition ${
-                    canOpenPayment
+                  className={`rounded-xl px-6 py-3 font-semibold transition ${canOpenPayment
                       ? "bg-white text-[#4F46E5] hover:scale-105 hover:shadow-lg"
                       : "cursor-not-allowed bg-gray-500/40 text-white/45"
-                  }`}
+                    }`}
                 >
                   Thanh toán
                 </button>
