@@ -61,11 +61,11 @@ function Header() {
   // ── Theme-aware class helpers ──
   const headerBg = scrolled
     ? isDark
-      ? "bg-black/95 backdrop-blur-md shadow-2xl"
-      : "bg-white/95 backdrop-blur-md shadow-lg border-b border-gray-200"
+      ? "bg-black/95 backdrop-blur-md shadow-2xl border-b border-yellow-500/30"
+      : "bg-white/95 backdrop-blur-md shadow-lg border-b-2 border-yellow-400"
     : isDark
-      ? "bg-gradient-to-b from-black/80 to-transparent"
-      : "bg-white/90 backdrop-blur-sm";
+      ? "bg-gradient-to-b from-black/80 to-transparent border-b border-yellow-500/20"
+      : "bg-white/90 backdrop-blur-sm border-b-2 border-yellow-400/40";
 
   const navLinkCls = isDark
     ? "text-gray-300 hover:text-yellow-400"

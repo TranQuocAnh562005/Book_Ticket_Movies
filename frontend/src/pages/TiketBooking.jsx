@@ -209,10 +209,25 @@ export default function TicketBooking() {
 
     const fetchMovie = async () => {
       try {
+        // Try to get from backend first
+        const backendRes = await fetch(
+          `${import.meta.env.VITE_API_BASE_URL || ""}/api/movies`
+        );
+        if (backendRes.ok) {
+          const movies = await backendRes.json();
+          const movie = movies.find(m => m.tmdbId === Number(id) || m.id === Number(id));
+          if (movie && !ignore) {
+            setMovie(movie.raw || movie);
+            return;
+          }
+        }
+
+        // Fallback to TMDB if not in backend
         const res = await fetch(
           `https://api.themoviedb.org/3/movie/${id}?api_key=${import.meta.env.VITE_API_KEY}&language=vi-VN`,
         );
         const data = await res.json();
+        console.log("Movie data from TMDB:", data);
         if (!ignore) setMovie(data);
       } catch (error) {
         console.error("Error fetching movie:", error);
@@ -780,7 +795,7 @@ export default function TicketBooking() {
             state: {
               movieId: movie.id,
               movieTitle: movie.title,
-              poster: movie.poster_path,
+              poster: movie.poster_path || "",
               showtimeId: selectedShowtime.id,
               cinemaName: selectedCinemaName,
               cinemaId: selectedCinemaId,

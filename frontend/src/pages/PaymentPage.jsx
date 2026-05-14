@@ -187,9 +187,13 @@ export default function PaymentPage() {
 
                 <div className="flex flex-col gap-6 md:flex-row">
                   <div className="shrink-0">
-                    {poster ? (
+                    {poster && poster.trim() ? (
                         <img
-                            src={`https://image.tmdb.org/t/p/w500${poster}`}
+                            src={
+                              poster.startsWith("http")
+                                ? poster
+                                : `https://image.tmdb.org/t/p/w500${poster}`
+                            }
                             alt={movieTitle}
                             className="h-[280px] w-[190px] rounded-[24px] object-cover shadow-xl"
                         />

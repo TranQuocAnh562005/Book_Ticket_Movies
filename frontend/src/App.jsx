@@ -41,7 +41,8 @@ function App() {
           </div>
         )}
         <Header />
-        <Routes>
+        <main className="relative z-5 pt-20 md:pt-15">
+          <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/account" element={<Account />} />
           <Route path="/movie" element={<Movie />} />
@@ -57,6 +58,7 @@ function App() {
           <Route path="/favorites" element={<Favorites />} />
           <Route path="/payment-result" element={<PaymentResult />} />
         </Routes>
+        </main>
         <Footer />
         <FloatingContact />
       </div>

@@ -105,9 +105,13 @@ export default function MyTicketDetail() {
 
               <div className="flex flex-col gap-6 md:flex-row">
                 <div className="shrink-0">
-                  {poster ? (
+                  {poster && poster.trim() ? (
                     <img
-                      src={`https://image.tmdb.org/t/p/w500${poster}`}
+                      src={
+                        poster.startsWith("http")
+                          ? poster
+                          : `https://image.tmdb.org/t/p/w500${poster}`
+                      }
                       alt={movieTitle}
                       className="h-[290px] w-[200px] rounded-[24px] object-cover shadow-xl"
                     />
