@@ -6,10 +6,12 @@ import {
 import { Link } from "react-router-dom";
 import video from "../assets/Tạo_Video_Giới_Thiệu_Kết_Thúc.mp4";
 import { useAuth } from "../context/AuthContext";
+import { useTheme } from "../context/ThemeContext";
 import { getFavorites, toggleFavorite } from "../services/favorites";
 import { getMyBookings } from "../services/bookings";
 
 function Movie() {
+  const { isDark } = useTheme();
   const [movies, setMovies] = useState([]);
   const [filteredMovies, setFilteredMovies] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -262,119 +264,37 @@ function Movie() {
     { id: "878", name: "Viễn tưởng", icon: "🚀" },
   ];
 
-  const MovieCard = ({ movie }) => {
-    const releaseDate = new Date(movie.release_date);
-    const now = new Date();
-    const isUpcoming = releaseDate > now;
-    const formattedDate = releaseDate.toLocaleDateString("vi-VN");
-    // Giả lập runtime nếu API không có để hiển thị đồng bộ với bộ lọc
-    const displayRuntime = movie.runtime || (85 + (movie.id % 50));
-
-    return (
-      <Link to={`/movie/${movie.id}`}>
-        <div className="group relative overflow-hidden rounded-xl bg-gradient-to-b from-gray-800 to-gray-900 shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 cursor-pointer">
-
-          {/* Poster Container */}
-          <div className="relative overflow-hidden">
-            <img
-              src={
-                movie.poster_path
-                  ? `${import.meta.env.VITE_IMG_URL}${movie.poster_path}`
-                  : "https://via.placeholder.com/300x450?text=No+Image"
-              }
-              alt={movie.title}
-              className="w-full h-[350px] object-cover transition-transform duration-700 group-hover:scale-110"
-            />
-
-            {/* Gradient Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-
-            {/* Status Badge */}
-            {isUpcoming ? (
-              <div className="absolute top-3 left-3 z-10 bg-gradient-to-r from-red-600 to-red-500 text-white text-xs px-3 py-1.5 rounded-full font-semibold shadow-lg animate-pulse">
-                🎬 Sắp chiếu
-              </div>
-            ) : (
-              <div className="absolute top-3 left-3 z-10 bg-gradient-to-r from-green-600 to-green-500 text-white text-xs px-3 py-1.5 rounded-full font-semibold shadow-lg">
-                🔥 Đang chiếu
-              </div>
-            )}
-
-            {/* Favorite Button */}
-            <button
-              onClick={(e) => handleToggleFavorite(e, movie)}
-              className="absolute top-3 right-3 z-20 text-xl transition-transform duration-200 hover:scale-125 drop-shadow-md"
-            >
-              {favoriteIds.includes(movie.id) ? "❤️" : "🤍"}
-            </button>
-
-            {/* Rating Badge */}
-            {movie.vote_average > 0 && (
-              <div className="absolute top-3 right-12 z-10 bg-black/80 backdrop-blur-sm text-yellow-400 text-xs px-2 py-1 rounded-full font-bold flex items-center gap-1">
-                <span>⭐</span>
-                <span>{movie.vote_average.toFixed(1)}</span>
-              </div>
-            )}
-
-            {/* Hover Action Button */}
-            <div className="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 transition-all duration-500 flex items-center justify-center">
-              <button className="bg-gradient-to-r from-yellow-500 to-red-500 text-black px-6 py-2.5 rounded-full font-bold text-sm transform hover:scale-105 transition duration-300 shadow-lg">
-                {isUpcoming ? "ĐẶT VÉ TRƯỚC" : "ĐẶT VÉ NGAY"}
-              </button>
-            </div>
-          </div>
-
-          {/* Info Section */}
-          <div className="p-4">
-            <h3 className="text-sm font-bold text-white line-clamp-2 mb-2 group-hover:text-yellow-400 transition-colors text-center">
-              {movie.title}
-            </h3>
-
-            <div className="flex items-center justify-center gap-2 text-xs text-gray-400">
-              <span>{releaseDate.getFullYear()}</span>
-              <span>•</span>
-              <span>{displayRuntime} phút</span>
-            </div>
-
-            {isUpcoming && (
-              <p className="text-xs text-yellow-400 text-center mt-2 font-semibold">
-                Khởi chiếu: {formattedDate}
-              </p>
-            )}
-          </div>
-        </div>
-      </Link>
-    );
-  };
+  // ── Theme helpers ──
+  const pageBg     = isDark ? "bg-gradient-to-b from-gray-900 to-black" : "bg-gray-50";
+  const filterBg   = isDark ? "bg-black/90 border-yellow-500/30" : "bg-white/95 border-gray-200 shadow-sm";
+  const inactivBtn = isDark ? "bg-gray-800 text-gray-300 hover:bg-gray-700" : "bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-200";
+  const genreBtn   = isDark ? "bg-gray-800 text-gray-300 hover:bg-gray-700" : "bg-gray-100 text-gray-600 hover:bg-gray-200";
+  const countText  = isDark ? "text-gray-400" : "text-gray-500";
+  const emptyTitle = isDark ? "text-white" : "text-gray-900";
+  const emptyText  = isDark ? "text-gray-400" : "text-gray-500";
+  const cardBg     = isDark ? "bg-gradient-to-b from-gray-800 to-gray-900" : "bg-white border border-gray-200";
+  const cardTitle  = isDark ? "text-white group-hover:text-yellow-400" : "text-gray-900 group-hover:text-yellow-600";
+  const cardMeta   = isDark ? "text-gray-400" : "text-gray-500";
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black flex items-center justify-center">
+      <div className={`min-h-screen ${pageBg} flex items-center justify-center`}>
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-yellow-500 mx-auto mb-4"></div>
-          <p className="text-white text-lg">Đang tải phim...</p>
+          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-yellow-500 mx-auto mb-4" />
+          <p className={`text-lg ${isDark ? "text-white" : "text-gray-700"}`}>Đang tải phim...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black">
+    <div className={`min-h-screen ${pageBg} transition-colors duration-300`}>
 
       {/* VIDEO HERO SECTION */}
       <div className="relative w-full h-[500px] overflow-hidden">
-        <video
-          src={video}
-          className="w-full h-full object-cover"
-          autoPlay
-          muted
-          loop
-          playsInline
-        />
+        <video src={video} className="w-full h-full object-cover" autoPlay muted loop playsInline />
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-r from-black/50 to-transparent" />
-
-        {/* Hero Text */}
         <div className="absolute bottom-10 left-0 right-0 text-center z-10">
           <h1 className="text-4xl md:text-6xl font-bold text-white mb-2 animate-fadeInUp">
             PHIM HAY TẠI RẠP
@@ -386,77 +306,55 @@ function Movie() {
       </div>
 
       {/* FILTER SECTION */}
-      <section className="sticky top-0 z-20 bg-black/90 backdrop-blur-md border-b border-yellow-500/30 py-4 shadow-lg">
+      <section className={`sticky top-0 z-20 backdrop-blur-md border-b py-4 shadow-lg ${filterBg}`}>
         <div className="max-w-7xl mx-auto px-6">
 
           {/* Status Tabs */}
-          <div className="flex gap-4 mb-4">
-            <button
-              onClick={() => setSelectedStatus("Đang chiếu")}
-              className={`px-6 py-2 rounded-full font-semibold transition-all duration-300 ${selectedStatus === "Đang chiếu"
-                ? "bg-gradient-to-r from-yellow-500 to-red-500 text-black shadow-lg transform scale-105"
-                : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+          <div className="flex flex-wrap gap-2 md:gap-4 mb-4">
+            {["Đang chiếu", "Sắp chiếu", "Yêu thích", "Có thể bạn thích"].map(status => (
+              <button
+                key={status}
+                onClick={() => setSelectedStatus(status)}
+                className={`px-5 py-2 rounded-full font-semibold transition-all duration-300 text-sm ${
+                  selectedStatus === status
+                    ? "bg-gradient-to-r from-yellow-500 to-red-500 text-black shadow-lg transform scale-105"
+                    : inactivBtn
                 }`}
-            >
-              🎬 Đang chiếu
-            </button>
-            <button
-              onClick={() => setSelectedStatus("Sắp chiếu")}
-              className={`px-6 py-2 rounded-full font-semibold transition-all duration-300 ${selectedStatus === "Sắp chiếu"
-                ? "bg-gradient-to-r from-yellow-500 to-red-500 text-black shadow-lg transform scale-105"
-                : "bg-gray-800 text-gray-300 hover:bg-gray-700"
-                }`}
-            >
-              ⏰ Sắp chiếu
-            </button>
-            <button
-              onClick={() => setSelectedStatus("Yêu thích")}
-              className={`px-6 py-2 rounded-full font-semibold transition-all duration-300 ${selectedStatus === "Yêu thích"
-                ? "bg-gradient-to-r from-yellow-500 to-red-500 text-black shadow-lg transform scale-105"
-                : "bg-gray-800 text-gray-300 hover:bg-gray-700"
-                }`}
-            >
-              ❤️ Yêu thích
-            </button>
-            <button
-              onClick={() => setSelectedStatus("Có thể bạn thích")}
-              className={`px-6 py-2 rounded-full font-semibold transition-all duration-300 ${selectedStatus === "Có thể bạn thích"
-                ? "bg-gradient-to-r from-yellow-500 to-red-500 text-black shadow-lg transform scale-105"
-                : "bg-gray-800 text-gray-300 hover:bg-gray-700"
-                }`}
-            >
-              ✨ Có thể bạn thích
-            </button>
+              >
+                {status === "Đang chiếu" && "🎬 "}
+                {status === "Sắp chiếu"  && "⏰ "}
+                {status === "Yêu thích"  && "❤️ "}
+                {status === "Có thể bạn thích" && "✨ "}
+                {status}
+              </button>
+            ))}
           </div>
 
           {/* Genre Filter */}
           <div className="flex flex-wrap gap-2 items-center">
-            <span className="text-gray-400 text-sm mr-2">🎭 Thể loại:</span>
+            <span className={`text-sm mr-2 ${countText}`}>🎭 Thể loại:</span>
             {genres.map((genre) => (
               <button
                 key={genre.id}
                 onClick={() => setSelectedGenre(genre.id)}
-                className={`px-3 py-1.5 rounded-full text-sm transition-all duration-300 ${selectedGenre === genre.id
-                  ? "bg-yellow-500 text-black font-semibold shadow-md"
-                  : "bg-gray-800 text-gray-300 hover:bg-gray-700"
-                  }`}
+                className={`px-3 py-1.5 rounded-full text-sm transition-all duration-300 ${
+                  selectedGenre === genre.id
+                    ? "bg-yellow-500 text-black font-semibold shadow-md"
+                    : genreBtn
+                }`}
               >
                 {genre.icon} {genre.name}
               </button>
             ))}
-
             <button
               onClick={resetFilters}
               className="ml-auto px-4 py-1.5 bg-red-600/80 hover:bg-red-600 text-white rounded-full text-sm transition-all duration-300 flex items-center gap-1"
             >
-              <span>🔄</span> Reset
+              🔄 Reset
             </button>
           </div>
 
-
-
-          {/* Results Count */}
-          <div className="mt-4 text-sm text-gray-400">
+          <div className={`mt-4 text-sm ${countText}`}>
             Tìm thấy <span className="text-yellow-500 font-bold">{Math.min(filteredMovies.length, visibleCount)}</span> phim đang hiển thị
           </div>
         </div>
@@ -468,18 +366,15 @@ function Movie() {
           selectedStatus === "Yêu thích" ? (
             <div className="text-center py-20">
               <div className="text-6xl mb-4">🤍</div>
-              <h3 className="text-2xl font-bold text-white mb-2">Chưa có phim yêu thích</h3>
-              <p className="text-gray-400">Bạn chưa yêu thích phim nào. Nhấn ❤️ trên poster để thêm!</p>
+              <h3 className={`text-2xl font-bold mb-2 ${emptyTitle}`}>Chưa có phim yêu thích</h3>
+              <p className={emptyText}>Bạn chưa yêu thích phim nào. Nhấn ❤️ trên poster để thêm!</p>
             </div>
           ) : (
             <div className="text-center py-20">
               <div className="text-6xl mb-4">🎬</div>
-              <h3 className="text-2xl font-bold text-white mb-2">Không tìm thấy phim</h3>
-              <p className="text-gray-400">Hãy thử chọn thể loại hoặc trạng thái khác nhé!</p>
-              <button
-                onClick={resetFilters}
-                className="mt-4 bg-yellow-500 text-black px-6 py-2 rounded-full font-semibold hover:bg-yellow-400 transition"
-              >
+              <h3 className={`text-2xl font-bold mb-2 ${emptyTitle}`}>Không tìm thấy phim</h3>
+              <p className={`mb-4 ${emptyText}`}>Hãy thử chọn thể loại hoặc trạng thái khác nhé!</p>
+              <button onClick={resetFilters} className="bg-yellow-500 text-black px-6 py-2 rounded-full font-semibold hover:bg-yellow-400 transition">
                 Đặt lại bộ lọc
               </button>
             </div>
@@ -487,24 +382,70 @@ function Movie() {
         ) : (
           <>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
-              {filteredMovies.slice(0, visibleCount).map((movie) => (
-                <MovieCard key={movie.id} movie={movie} />
-              ))}
+              {filteredMovies.slice(0, visibleCount).map((movie) => {
+                const releaseDate = new Date(movie.release_date);
+                const now = new Date();
+                const isUpcoming = releaseDate > now;
+                const formattedDate = releaseDate.toLocaleDateString("vi-VN");
+                const displayRuntime = movie.runtime || (85 + (movie.id % 50));
+                return (
+                  <Link to={`/movie/${movie.id}`} key={movie.id}>
+                    <div className={`group relative overflow-hidden rounded-xl shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 cursor-pointer ${cardBg}`}>
+                      <div className="relative overflow-hidden">
+                        <img
+                          src={movie.poster_path ? `${import.meta.env.VITE_IMG_URL}${movie.poster_path}` : "https://via.placeholder.com/300x450?text=No+Image"}
+                          alt={movie.title}
+                          className="w-full h-[350px] object-cover transition-transform duration-700 group-hover:scale-110"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                        {isUpcoming ? (
+                          <div className="absolute top-3 left-3 z-10 bg-gradient-to-r from-red-600 to-red-500 text-white text-xs px-3 py-1.5 rounded-full font-semibold shadow-lg animate-pulse">🎬 Sắp chiếu</div>
+                        ) : (
+                          <div className="absolute top-3 left-3 z-10 bg-gradient-to-r from-green-600 to-green-500 text-white text-xs px-3 py-1.5 rounded-full font-semibold shadow-lg">🔥 Đang chiếu</div>
+                        )}
+                        <button onClick={(e) => handleToggleFavorite(e, movie)} className="absolute top-3 right-3 z-20 text-xl transition-transform duration-200 hover:scale-125 drop-shadow-md">
+                          {favoriteIds.includes(movie.id) ? "❤️" : "🤍"}
+                        </button>
+                        {movie.vote_average > 0 && (
+                          <div className="absolute top-3 right-12 z-10 bg-black/80 backdrop-blur-sm text-yellow-400 text-xs px-2 py-1 rounded-full font-bold flex items-center gap-1">
+                            <span>⭐</span><span>{movie.vote_average.toFixed(1)}</span>
+                          </div>
+                        )}
+                        <div className="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 transition-all duration-500 flex items-center justify-center">
+                          <button className="bg-gradient-to-r from-yellow-500 to-red-500 text-black px-6 py-2.5 rounded-full font-bold text-sm transform hover:scale-105 transition duration-300 shadow-lg">
+                            {isUpcoming ? "ĐẶT VÉ TRƯỚC" : "ĐẶT VÉ NGAY"}
+                          </button>
+                        </div>
+                      </div>
+                      <div className="p-4">
+                        <h3 className={`text-sm font-bold line-clamp-2 mb-2 transition-colors text-center ${cardTitle}`}>{movie.title}</h3>
+                        <div className={`flex items-center justify-center gap-2 text-xs ${cardMeta}`}>
+                          <span>{releaseDate.getFullYear()}</span>
+                          <span>•</span>
+                          <span>{displayRuntime} phút</span>
+                        </div>
+                        {isUpcoming && (
+                          <p className="text-xs text-yellow-400 text-center mt-2 font-semibold">Khởi chiếu: {formattedDate}</p>
+                        )}
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
             </div>
 
-            {/* Load More Button */}
             {((selectedStatus !== "Yêu thích" && selectedStatus !== "Có thể bạn thích" && (visibleCount < filteredMovies.length || hasMoreAPI)) ||
               ((selectedStatus === "Yêu thích" || selectedStatus === "Có thể bạn thích") && visibleCount < filteredMovies.length)) && (
-                <div className="text-center mt-12">
-                  <button
-                    onClick={handleLoadMore}
-                    disabled={loadingMore}
-                    className={`bg-transparent border-2 border-yellow-500 text-yellow-500 px-8 py-3 rounded-full font-semibold hover:bg-yellow-500 hover:text-black transition-all duration-300 transform ${loadingMore ? "opacity-50 cursor-not-allowed" : "hover:scale-105"}`}
-                  >
-                    {loadingMore ? "Đang tải..." : "Xem thêm phim"}
-                  </button>
-                </div>
-              )}
+              <div className="text-center mt-12">
+                <button
+                  onClick={handleLoadMore}
+                  disabled={loadingMore}
+                  className={`border-2 border-yellow-500 text-yellow-500 px-8 py-3 rounded-full font-semibold hover:bg-yellow-500 hover:text-black transition-all duration-300 transform bg-transparent ${loadingMore ? "opacity-50 cursor-not-allowed" : "hover:scale-105"}`}
+                >
+                  {loadingMore ? "Đang tải..." : "Xem thêm phim"}
+                </button>
+              </div>
+            )}
           </>
         )}
       </div>

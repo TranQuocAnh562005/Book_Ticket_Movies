@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { useNavigate } from "react-router-dom";
 import { useGoogleLogin } from "@react-oauth/google";
 import { useAuth } from "../context/AuthContext";
+import { useToast } from "../context/ToastContext";
 import { loginUser, signupUser, googleAuthApi, forgotPasswordApi, resetPasswordApi } from "../services/auth";
 
 const EyeIcon = () => (
@@ -25,6 +26,7 @@ const EyeOffIcon = () => (
 function Account() {
   const navigate = useNavigate();
   const auth = useAuth();
+  const { addToast } = useToast();
 
   const [mode, setMode] = useState("login");
   const [showPassword, setShowPassword] = useState(false);
@@ -66,7 +68,8 @@ function Account() {
         }
 
         auth.login(result.user, result.token);
-        window.location.href = "/";
+        addToast(`Chào mừng, ${result.user.fullName || "bạn"}! 🎬`, "success");
+        navigate("/");
       } catch (err) {
         setError(err.message || "Đăng nhập Google thất bại");
       } finally {
@@ -127,7 +130,8 @@ function Account() {
         }
 
         auth.login(result.user, result.token);
-        window.location.href = "/";
+        addToast(`Chào mừng trở lại, ${result.user.fullName || "bạn"}! 🎬`, "success");
+        navigate("/");
 
       } else {
         // ── ĐĂNG KÝ → Tự động đăng nhập luôn ─────────────────
@@ -138,7 +142,8 @@ function Account() {
         }
 
         auth.login(result.user, result.token);
-        window.location.href = "/";
+        addToast("Tạo tài khoản thành công! Chào mừng bạn 🎉", "success");
+        navigate("/");
       }
     } catch (err) {
       setError(err.message || "Đã có lỗi xảy ra, vui lòng thử lại");

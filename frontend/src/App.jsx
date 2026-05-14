@@ -10,6 +10,7 @@ import Account from "./pages/Account";
 import Movie from "./pages/Movie";
 import TicketBooking from "./pages/TicketBooking";
 import CinemaNews from "./pages/CinemaNews";
+import NewsDetail from "./pages/NewsDetail";
 import Tickets from "./pages/Tickets";
 import AboutUs from "./pages/AboutUs";
 import PaymentPage from "./pages/PaymentPage";
@@ -17,23 +18,28 @@ import MyTicketDetail from "./pages/MyTicketDetail";
 import ProfilePage from "./pages/ProfilePage";
 import PaymentResult from "./pages/PaymentResult";
 import Favorites from "./pages/Favorites";
+import { useTheme } from "./context/ThemeContext";
 
 function App() {
+  const { isDark } = useTheme();
+
   return (
     <BrowserRouter>
-      <div className="relative z-10 min-h-screen text-white bg-black">
-        {/* Background Light Effect */}
-        <div className="fixed inset-0 z-0 pointer-events-none">
-          <LightRays
-            raysOrigin="top-center"
-            raysColor="#ffffff"
-            raysSpeed={1}
-            lightSpread={0.6}
-            rayLength={3}
-            followMouse={true}
-            mouseInfluence={0.1}
-          />
-        </div>
+      <div className={`relative z-10 min-h-screen transition-colors duration-300 ${isDark ? "text-white bg-black" : "text-gray-900 bg-white"}`}>
+        {/* Background Light Effect — only in dark mode */}
+        {isDark && (
+          <div className="fixed inset-0 z-0 pointer-events-none">
+            <LightRays
+              raysOrigin="top-center"
+              raysColor="#ffffff"
+              raysSpeed={1}
+              lightSpread={0.6}
+              rayLength={3}
+              followMouse={true}
+              mouseInfluence={0.1}
+            />
+          </div>
+        )}
         <Header />
         <Routes>
           <Route path="/" element={<Home />} />
@@ -45,6 +51,7 @@ function App() {
           <Route path="/about" element={<AboutUs />} />
           <Route path="/payment" element={<PaymentPage />} />
           <Route path="/news" element={<CinemaNews />} />
+          <Route path="/news/:id" element={<NewsDetail />} />
           <Route path="/my-ticket-detail" element={<MyTicketDetail />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/favorites" element={<Favorites />} />
