@@ -1,6 +1,33 @@
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
+function resolveMoviePoster(ticket) {
+  const fields = ["poster", "posterUrl", "thumbnail", "image", "poster_path"];
+  for (const field of fields) {
+    const val = ticket[field];
+    if (!val || typeof val !== "string" || !val.trim()) continue;
+    const trimmed = val.trim();
+    if (trimmed.startsWith("http")) return trimmed;
+    const apiBase = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/$/, "");
+    if (trimmed.startsWith("/uploads/") && apiBase) return `${apiBase}${trimmed}`;
+    return `https://image.tmdb.org/t/p/w500${trimmed}`;
+  }
+  return null;
+}
+
+function MoviePosterFallback({ title }) {
+  return (
+    <div className="h-[290px] w-[200px] shrink-0 rounded-[24px] bg-gradient-to-b from-[#1a1a2e] via-[#16213e] to-[#0f3460] flex flex-col items-center justify-center gap-3 border border-white/10 shadow-xl">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-12 h-12 text-yellow-400/60">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3.375 19.5h17.25m-17.25 0a1.125 1.125 0 01-1.125-1.125M3.375 19.5h1.5C5.496 19.5 6 18.996 6 18.375m-3.75.125A1.125 1.125 0 012.25 18.375V5.625m0 0A1.125 1.125 0 013.375 4.5h.375m13.125 0h.375a1.125 1.125 0 011.125 1.125v12.75c0 .621-.504 1.125-1.125 1.125m0 0h-1.5m-13.5 0h9m-9 0H6m0-15v15m13.5-15v15M6 6.75h.75M6 9.75h.75M6 12.75h.75M9.75 6.75h.75M9.75 9.75h.75M9.75 12.75h.75M13.5 6.75h.75M13.5 9.75h.75M13.5 12.75h.75" />
+      </svg>
+      <p className="text-[11px] text-white/40 text-center px-3 line-clamp-3 leading-relaxed">
+        {title || "Không có poster"}
+      </p>
+    </div>
+  );
+}
+
 export default function MyTicketDetail() {
   const { state } = useLocation();
   const navigate = useNavigate();
@@ -9,7 +36,6 @@ export default function MyTicketDetail() {
 
   const {
     movieTitle,
-    poster,
     cinemaName,
     cinemaId,
     screenId,
@@ -25,6 +51,9 @@ export default function MyTicketDetail() {
     orderCode,
   } = ticket;
 
+  const moviePoster = resolveMoviePoster(ticket);
+  const [posterError, setPosterError] = useState(false);
+
   const [qrCode, setQrCode] = useState(null);
   const [qrLoading, setQrLoading] = useState(true);
   const [qrError, setQrError] = useState("");
@@ -34,7 +63,7 @@ export default function MyTicketDetail() {
 
     const fetchQR = async () => {
       try {
-        const token = localStorage.getItem("token");
+        const token = localStorage.getItem("tf_token");
         const res = await fetch(`http://localhost:5001/api/bookings/${orderCode}/qr`, {
           headers: {
             Authorization: `Bearer ${token}`
@@ -105,20 +134,15 @@ export default function MyTicketDetail() {
 
               <div className="flex flex-col gap-6 md:flex-row">
                 <div className="shrink-0">
-                  {poster && poster.trim() ? (
+                  {moviePoster && !posterError ? (
                     <img
-                      src={
-                        poster.startsWith("http")
-                          ? poster
-                          : `https://image.tmdb.org/t/p/w500${poster}`
-                      }
+                      src={moviePoster}
                       alt={movieTitle}
                       className="h-[290px] w-[200px] rounded-[24px] object-cover shadow-xl"
+                      onError={() => setPosterError(true)}
                     />
                   ) : (
-                    <div className="flex h-[290px] w-[200px] items-center justify-center rounded-[24px] bg-white/10 text-white/50">
-                      No Image
-                    </div>
+                    <MoviePosterFallback title={movieTitle} />
                   )}
                 </div>
 

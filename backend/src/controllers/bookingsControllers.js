@@ -70,12 +70,37 @@ function buildMyBookingsQuery(user) {
   return { $or: query };
 }
 
+function extractMoviePoster(movie) {
+  if (!movie) return null;
+  const override = movie.adminOverride || {};
+  const raw = movie.tmdbRaw || {};
+
+  const overridePoster =
+    override.poster || override.posterUrl || override.thumbnail || override.image;
+  if (overridePoster) return overridePoster;
+
+  const posterPath = raw.poster_path;
+  if (posterPath) {
+    return posterPath.startsWith("http")
+      ? posterPath
+      : `https://image.tmdb.org/t/p/w500${posterPath}`;
+  }
+  return null;
+}
+
 function serializeBooking(booking) {
   const populatedShowtime =
     booking.showtimeId &&
     typeof booking.showtimeId === "object" &&
     booking.showtimeId._id
       ? booking.showtimeId
+      : null;
+
+  const movie =
+    populatedShowtime &&
+    populatedShowtime.movieId &&
+    typeof populatedShowtime.movieId === "object"
+      ? populatedShowtime.movieId
       : null;
 
   return {
@@ -95,6 +120,7 @@ function serializeBooking(booking) {
         }
       : null,
     movieTitle: booking.movieTitle,
+    poster: extractMoviePoster(movie),
     cinemaId: booking.cinemaId,
     cinemaName: booking.cinemaName,
     screenId: booking.screenId,
@@ -300,7 +326,11 @@ export const getMyBookings = async (req, res) => {
       .sort({ createdAt: -1 })
       .populate({
         path: "showtimeId",
-        select: "date startTime endTime durationMinutes status",
+        select: "date startTime endTime durationMinutes status movieId",
+        populate: {
+          path: "movieId",
+          select: "tmdbRaw adminOverride source",
+        },
       })
       .lean();
 
